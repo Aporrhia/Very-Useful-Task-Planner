@@ -1,0 +1,2150 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <!-- TESTING: open this file with ?calm (or #calm) on the end of the URL to disable the extra misery layers -->
+    <script>if (/calm/.test(location.search + location.hash)) document.documentElement.classList.add('calm');</script>
+    <style>
+        .calm #cookie-bar, .calm #restart-bar, .calm #help-bubble, .calm #watermark, .calm .decoy, .calm #fake-cursor,
+        .calm #loading-veil, .calm #login-veil, .calm #tc-veil, .calm #ad-veil, .calm #session-veil, .calm #nag,
+        .calm #rating-veil, .calm #perm-box, .calm #ticker { display: none !important; }
+        .calm #tour-veil, .calm #giant-tip, .calm #update-bar { display: none !important; }
+        .calm *, .calm button, .calm a, .calm label, .calm select, .calm input, .calm [draggable] { cursor: auto !important; }
+        .calm body { user-select: auto !important; -webkit-user-select: auto !important; text-align: left !important; font-family: 'Inter', sans-serif !important; letter-spacing: normal !important; }
+        .calm main { transform: none !important; filter: none !important; }
+        .calm main > section:nth-child(2) { margin-bottom: 0 !important; }
+        .calm [draggable] { filter: none !important; transform: none !important; margin: 0 !important; }
+        .calm [draggable] p { letter-spacing: normal !important; }
+        .calm h4 { max-width: none !important; white-space: normal !important; }
+        .calm #stat-total, .calm #stat-overdue { animation: none !important; }
+        .calm #task-modal > div { animation: none !important; }
+        .calm header { padding-top: .75rem !important; padding-bottom: .75rem !important; }
+        .calm header button:hover, .calm header label:hover { transform: none !important; }
+        .calm select { font-size: 12px !important; }
+        .calm .subtask-check { width: 16px !important; height: 16px !important; }
+        .calm html, html.calm { zoom: 1 !important; }
+        .calm *:focus { outline: revert !important; }
+    </style>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Untitled</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0f172a',
+                        darkCard: '#1e293b',
+                        darkBorder: '#334155',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Comic Sans MS', 'Chalkboard SE', cursive; letter-spacing: 0.04em; }
+        h1, h2, h3, h4 { font-family: 'Times New Roman', serif; font-style: italic; }
+        /* No focus indicators at all */
+        *:focus, *:focus-visible { outline: none !important; box-shadow: none !important; }
+        /* Buttons wander away when you try to click them */
+        header button:hover, header label:hover { transform: translateX(14px) rotate(-2deg); }
+        /* Slippery scrollbars */
+        select { font-size: 9px !important; }
+        td, th { white-space: nowrap; }
+        /* Custom Scrollbar for sleek UI */
+        ::-webkit-scrollbar { width: 2px; height: 2px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #f1f5f9; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #1e293b; }
+        .kanban-col { min-height: 400px; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white dark:bg-darkCard border-b border-slate-200 dark:border-darkBorder sticky top-0 z-30 px-6 py-12 flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-600 text-white p-2 rounded-xl flex items-center justify-center shadow-md shadow-indigo-500/20">
+                <i class="fa-solid fa-layer-group text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-tight flex items-center gap-2">
+                    TaskSphere <span class="text-xs bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full font-semibold">PRO</span>
+                </h1>
+                <p class="text-xs text-slate-300 dark:text-slate-700">Enterprise Productivity & Task Management</p>
+            </div>
+        </div>
+
+        <!-- Center Search Bar -->
+        <div class="hidden md:flex items-center relative max-w-md w-full mx-4">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-slate-400 text-sm"></i>
+            <input type="text" id="global-search" placeholder="Type here (or don't)" 
+                class="w-full pl-10 pr-12 py-2 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-darkBorder rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+            <span class="absolute right-3 text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded font-mono">/</span>
+        </div>
+
+        <!-- Right Action Controls -->
+        <div class="flex items-center gap-3">
+            <button onclick="toggleTheme()" class="p-6 rounded-xl bg-rose-500 hover:bg-fuchsia-600 text-yellow-200 text-2xl transition-colors" title="Toggle Theme">
+                <i id="theme-icon" class="fa-solid fa-moon"></i>
+            </button>
+            <div class="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
+            <button onclick="exportData()" class="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors">
+                <i class="fa-solid fa-file-arrow-down"></i> Export
+            </button>
+            <label class="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer transition-colors">
+                <i class="fa-solid fa-file-arrow-up"></i> Import
+                <input type="file" id="import-file" accept=".json" class="hidden" onchange="importData(event)">
+            </label>
+            <button onclick="openModal()" class="flex items-center gap-1 px-1 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600 rounded text-[9px]">
+                <i class="fa-solid fa-plus"></i>
+                <span>Entry+</span>
+                <span class="hidden lg:inline text-[10px] bg-indigo-500 px-1.5 py-0.5 rounded font-mono">N</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
+
+        <!-- Analytics / Dashboard Summary Cards -->
+        <section class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Card 1 -->
+            <div class="bg-white dark:bg-darkCard p-4 rounded-2xl border border-slate-200 dark:border-darkBorder shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-[9px] font-light text-slate-300 dark:text-slate-700">Total Tasks</p>
+                    <h3 id="stat-total" class="text-2xl font-bold mt-1">0</h3>
+                    <p class="text-[9px] text-slate-200 dark:text-slate-800 mt-1">Active workload</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+            </div>
+            <!-- Card 2 -->
+            <div class="bg-white dark:bg-darkCard p-4 rounded-2xl border border-slate-200 dark:border-darkBorder shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-[9px] font-light text-slate-300 dark:text-slate-700">Completed</p>
+                    <h3 id="stat-completed" class="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">0</h3>
+                    <p id="stat-completion-rate" class="text-[11px] text-emerald-500 font-medium mt-1">0% completed</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+            <!-- Card 3 -->
+            <div class="bg-white dark:bg-darkCard p-4 rounded-2xl border border-slate-200 dark:border-darkBorder shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-[9px] font-light text-slate-300 dark:text-slate-700">Overdue Tasks</p>
+                    <h3 id="stat-overdue" class="text-2xl font-bold mt-1 text-rose-600 dark:text-rose-400">0</h3>
+                    <p class="text-[9px] text-rose-100 dark:text-rose-950 mt-1">Requires immediate attention</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+            </div>
+            <!-- Card 4 -->
+            <div class="bg-white dark:bg-darkCard p-4 rounded-2xl border border-slate-200 dark:border-darkBorder shadow-sm flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <p class="text-[9px] font-light text-slate-300 dark:text-slate-700">Productivity Progress</p>
+                    <span id="stat-progress-pct" class="text-xs font-bold text-indigo-600 dark:text-indigo-400">0%</span>
+                </div>
+                <div class="w-full bg-slate-100 dark:bg-slate-800 h-0.5 rounded-full overflow-hidden mt-3">
+                    <div id="stat-progress-bar" class="bg-indigo-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-2">Based on closed tasks</p>
+            </div>
+        </section>
+
+        <!-- Filters and View Controls Toolbar -->
+        <section class="bg-white dark:bg-darkCard p-4 rounded-2xl border border-slate-200 dark:border-darkBorder shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+            <!-- Left Filters -->
+            <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+                <!-- Date Filter -->
+                <select id="filter-date" onchange="applyFilters()" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-darkBorder rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="all">📅</option>
+                    <option value="today">Today</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="overdue">Overdue</option>
+                </select>
+
+                <!-- Priority Filter -->
+                <select id="filter-priority" onchange="applyFilters()" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-darkBorder rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="all">⚡</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
+                </select>
+
+                <!-- Category Filter -->
+                <select id="filter-category" onchange="applyFilters()" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-darkBorder rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="all">🏷️</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Design">Design</option>
+                    <option value="Product">Product</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Personal">Personal</option>
+                </select>
+
+                <!-- Status Filter (for list view) -->
+                <select id="filter-status" onchange="applyFilters()" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-darkBorder rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="all">📌</option>
+                    <option value="To Do">To Do</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                </select>
+
+                <button onclick="resetFilters()" class="text-[7px] text-slate-100 dark:text-slate-900 px-0 py-0">Reset</button>
+            </div>
+
+            <!-- Right View Switcher & Archive Toggle -->
+            <div class="flex items-center gap-2 self-end md:self-auto">
+                <div class="flex items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-darkBorder">
+                    <button onclick="switchView('kanban')" id="view-btn-kanban" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-500 transition-all">
+                        <i class="fa-solid fa-columns"></i> View A
+                    </button>
+                    <button onclick="switchView('list')" id="view-btn-list" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
+                        <i class="fa-solid fa-list"></i> View B
+                    </button>
+                </div>
+                <button onclick="toggleArchiveView()" id="archive-toggle-btn" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-darkBorder text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-box-archive"></i> <span id="archive-btn-text">Archive</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Main Content Area: Kanban Board / List View -->
+        <section id="main-content-area" class="flex-1">
+            <!-- Kanban View -->
+            <div id="kanban-view" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Column: To Do -->
+                <div class="bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder rounded-2xl p-4 flex flex-col shadow-sm">
+                    <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                            <h2 class="font-semibold text-sm">Pending Action Items (Unprocessed)</h2>
+                            <span id="count-todo" class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full font-bold text-slate-600 dark:text-slate-400">0</span>
+                        </div>
+                        <button onclick="openModalWithStatus('To Do')" class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1"><i class="fa-solid fa-plus text-xs"></i></button>
+                    </div>
+                    <div id="kanban-todo" class="kanban-col flex flex-col gap-3 overflow-y-auto max-h-[14vh] pr-1" ondragover="allowDrop(event)" ondrop="dropTask(event, 'To Do')">
+                        <!-- Tasks inserted dynamically -->
+                    </div>
+                </div>
+
+                <!-- Column: In Progress -->
+                <div class="bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder rounded-2xl p-4 flex flex-col shadow-sm">
+                    <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-indigo-500"></span>
+                            <h2 class="font-semibold text-sm">Currently Being Worked On By Someone</h2>
+                            <span id="count-inprogress" class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full font-bold text-slate-600 dark:text-slate-400">0</span>
+                        </div>
+                        <button onclick="openModalWithStatus('In Progress')" class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1"><i class="fa-solid fa-plus text-xs"></i></button>
+                    </div>
+                    <div id="kanban-inprogress" class="kanban-col flex flex-col gap-3 overflow-y-auto max-h-[14vh] pr-1" ondragover="allowDrop(event)" ondrop="dropTask(event, 'In Progress')">
+                        <!-- Tasks inserted dynamically -->
+                    </div>
+                </div>
+
+                <!-- Column: Completed -->
+                <div class="bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder rounded-2xl p-4 flex flex-col shadow-sm">
+                    <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                            <h2 class="font-semibold text-sm">Done-ish</h2>
+                            <span id="count-completed" class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full font-bold text-slate-600 dark:text-slate-400">0</span>
+                        </div>
+                        <button onclick="openModalWithStatus('Completed')" class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1"><i class="fa-solid fa-plus text-xs"></i></button>
+                    </div>
+                    <div id="kanban-completed" class="kanban-col flex flex-col gap-3 overflow-y-auto max-h-[14vh] pr-1" ondragover="allowDrop(event)" ondrop="dropTask(event, 'Completed')">
+                        <!-- Tasks inserted dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- List View (Table) -->
+            <div id="list-view" class="hidden bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder rounded-2xl shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-darkBorder text-slate-500 dark:text-slate-400 text-xs font-semibold">
+                                <th class="p-4">Task Title</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4">Priority</th>
+                                <th class="p-4">Category</th>
+                                <th class="p-4">Due Date</th>
+                                <th class="p-4">Est. Time</th>
+                                <th class="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="list-tbody" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                            <!-- Rows inserted dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Task Create/Edit Modal Drawer -->
+    <div id="task-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder rounded-3xl max-w-xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-darkBorder flex items-center justify-between bg-slate-50 dark:bg-slate-900">
+                <h3 id="modal-title" class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-indigo-600"></i> Create New Task
+                </h3>
+                <button onclick="closeModal()" class="text-slate-100 dark:text-slate-800 text-[6px] p-0"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Modal Body Form -->
+            <form id="task-form" onsubmit="handleTaskSubmit(event)" class="p-6 overflow-y-auto flex flex-col gap-4">
+                <input type="hidden" id="task-id">
+
+                <!-- Title -->
+                <div>
+                    <label class="block text-[9px] font-light text-slate-200 dark:text-slate-800 mb-1">Field 1</label>
+                    <input type="text" id="form-title" required placeholder="Enter value" 
+                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-darkBorder rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-[9px] font-light text-slate-200 dark:text-slate-800 mb-1">Description</label>
+                    <textarea id="form-desc" rows="3" placeholder="Enter value" 
+                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-darkBorder rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+
+                <!-- Row: Priority & Status & Category -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-[9px] font-light text-slate-200 dark:text-slate-800 mb-1">Priority</label>
+                        <select id="form-priority" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-darkBorder rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Low">Low</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="High">High</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-light text-slate-200 dark:text-slate-800 mb-1">Status</label>
+                        <select id="form-status" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-darkBorder rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="To Do">To Do</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-light text-slate-200 dark:text-slate-800 mb-1">Category / Tag</label>
+                        <select id="form-category" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-darkBorder rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Engineering">Engineering</option>
+                            <option value="Design">Design</option>
+                            <option value="Product">Product</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Personal">Personal</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row: Due Date & Estimated Time -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[9px] font-light text-slate-200 dark:text-slate-800 mb-1">Due Date</label>
+                        <input type="date" id="form-date" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-darkBorder rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-light text-slate-200 dark:text-slate-800 mb-1">Estimated Time</label>
+                        <input type="text" id="form-time" placeholder="HH:MM:SS.ms" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-darkBorder rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <!-- Subtasks Checklist Section -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-semibold text-slate-600 dark:text-slate-300">Subtasks Checklist</label>
+                        <button type="button" onclick="addSubtaskInput()" class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">
+                            <i class="fa-solid fa-plus"></i> Add Subtask
+                        </button>
+                    </div>
+                    <div id="subtasks-container" class="flex flex-col gap-2">
+                        <!-- Dynamically inserted subtask row inputs -->
+                    </div>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="pt-3 border-t border-slate-200 dark:border-darkBorder flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeModal()" class="px-8 py-3 rounded-xl text-base font-bold bg-indigo-600 text-white">Submit</button>
+                    <button type="submit" class="px-1 py-0 rounded text-[8px] bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600">Ok</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+if (!document.documentElement.classList.contains('calm')) {
+
+        // State Management
+        let tasks = JSON.parse(localStorage.getItem('tasksphere_tasks')) || [
+            {
+                id: 'task-1',
+                title: 'Review Q3 Engineering Roadmap',
+                description: 'Analyze resource allocation and timeline dependencies for cloud migration.',
+                priority: 'High',
+                status: 'In Progress',
+                category: 'Engineering',
+                dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+                estTime: '3h',
+                subtasks: [
+                    { title: 'Check server cluster benchmarks', completed: true },
+                    { title: 'Approve final cloud vendor contract', completed: false }
+                ],
+                archived: false,
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'task-2',
+                title: 'Design Dark Mode UI System Tokens',
+                description: 'Establish unified slate color tokens and high-contrast accessibility compliance.',
+                priority: 'Urgent',
+                status: 'To Do',
+                category: 'Design',
+                dueDate: new Date(Date.now() - 86400000).toISOString().split('T')[0], // Overdue example
+                estTime: '5h',
+                subtasks: [
+                    { title: 'Audit current color variables', completed: false },
+                    { title: 'Create Tailwind extension config', completed: false }
+                ],
+                archived: false,
+                createdAt: new Date().toISOString()
+            }
+        ];
+
+        let currentView = 'kanban'; // 'kanban' or 'list'
+        let showArchived = false;
+
+        // Initialize on load
+        window.onload = function() {
+            renderApp();
+            setupKeyboardShortcuts();
+            // Default date picker to today if new
+            document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
+        };
+
+        // Save to LocalStorage
+        function saveTasks() {
+            localStorage.setItem('tasksphere_tasks', JSON.stringify(tasks));
+            renderApp();
+        }
+
+        // Render entire app
+        function renderApp() {
+            updateAnalytics();
+            renderKanbanOrList();
+        }
+
+        // Analytics calculation
+        function updateAnalytics() {
+            const activeTasks = tasks.filter(t => !t.archived);
+            const total = activeTasks.length;
+            const completed = activeTasks.filter(t => t.status === 'Completed').length;
+            
+            const todayStr = new Date().toISOString().split('T')[0];
+            const overdue = activeTasks.filter(t => t.status !== 'Completed' && t.dueDate && t.dueDate < todayStr).length;
+
+            const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-completed').innerText = completed;
+            document.getElementById('stat-completion-rate').innerText = `${rate}% completed`;
+            document.getElementById('stat-overdue').innerText = overdue;
+            document.getElementById('stat-progress-pct').innerText = `${rate}%`;
+            document.getElementById('stat-progress-bar').style.width = `${rate}%`;
+        }
+
+        // Filter getter
+        function getFilteredTasks() {
+            const dateFilter = document.getElementById('filter-date').value;
+            const priorityFilter = document.getElementById('filter-priority').value;
+            const categoryFilter = document.getElementById('filter-category').value;
+            const statusFilter = document.getElementById('filter-status').value;
+            const searchQuery = document.getElementById('global-search').value.toLowerCase();
+
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            return tasks.filter(t => {
+                // Archive state check
+                if (t.archived !== showArchived) return false;
+
+                // Search query
+                if (searchQuery && !t.title.toLowerCase().includes(searchQuery) && !t.description.toLowerCase().includes(searchQuery) && !t.category.toLowerCase().includes(searchQuery)) {
+                    return false;
+                }
+
+                // Priority filter
+                if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false;
+
+                // Category filter
+                if (categoryFilter !== 'all' && t.category !== categoryFilter) return false;
+
+                // Status filter (for list view or general)
+                if (statusFilter !== 'all' && t.status !== statusFilter) return false;
+
+                // Date filter
+                if (dateFilter !== 'all') {
+                    if (!t.dueDate) return false;
+                    if (dateFilter === 'today' && t.dueDate !== todayStr) return false;
+                    if (dateFilter === 'overdue' && (t.dueDate >= todayStr || t.status === 'Completed')) return false;
+                    if (dateFilter === 'upcoming' && t.dueDate <= todayStr) return false;
+                }
+
+                return true;
+            });
+        }
+
+        // Render Kanban or List
+        function renderKanbanOrList() {
+            const filtered = getFilteredTasks();
+
+            // Render Kanban Columns
+            const todoList = filtered.filter(t => t.status === 'To Do');
+            const inProgressList = filtered.filter(t => t.status === 'In Progress');
+            const completedList = filtered.filter(t => t.status === 'Completed');
+
+            document.getElementById('count-todo').innerText = todoList.length;
+            document.getElementById('count-inprogress').innerText = inProgressList.length;
+            document.getElementById('count-completed').innerText = completedList.length;
+
+            document.getElementById('kanban-todo').innerHTML = todoList.map(t => renderTaskCard(t)).join('') || getEmptyKanbanState();
+            document.getElementById('kanban-inprogress').innerHTML = inProgressList.map(t => renderTaskCard(t)).join('') || getEmptyKanbanState();
+            document.getElementById('kanban-completed').innerHTML = completedList.map(t => renderTaskCard(t)).join('') || getEmptyKanbanState();
+
+            // Render List View Table
+            const tbody = document.getElementById('list-tbody');
+            tbody.innerHTML = filtered.map(t => renderListRow(t)).join('') || `<tr><td colspan="7" class="text-center py-8 text-slate-400">No matching tasks found.</td></tr>`;
+        }
+
+        function getEmptyKanbanState() {
+            return `<div class="text-center py-8 text-slate-400 dark:text-slate-600 text-xs border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">Nothing</div>`;
+        }
+
+        // Task Card HTML template for Kanban
+        function renderTaskCard(t) {
+            const priorityColors = {
+                Low: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+                Medium: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+                High: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+                Urgent: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+            };
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            const isOverdue = t.dueDate && t.dueDate < todayStr && t.status !== 'Completed';
+
+            const completedSubtasks = t.subtasks.filter(s => s.completed).length;
+            const totalSubtasks = t.subtasks.length;
+
+            return `
+                <div draggable="true" ondragstart="drag(event, '${t.id}')" 
+                    class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col gap-3 relative group">
+                    
+                    <!-- Top row badges -->
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${priorityColors[t.priority]}">${t.priority}</span>
+                        <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${t.category}</span>
+                    </div>
+
+                    <!-- Title & Description -->
+                    <div>
+                        <h4 class="font-light text-[11px] text-slate-400 dark:text-slate-600 leading-snug">${escapeHtml(t.title)}</h4>
+                        ${t.description ? `<p class="text-[14px] font-bold text-slate-800 dark:text-slate-100 mt-1 line-clamp-2">${escapeHtml(t.description)}</p>` : ''}
+                    </div>
+
+                    <!-- Subtasks Progress Bar if exist -->
+                    ${totalSubtasks > 0 ? `
+                        <div class="flex items-center gap-2 text-xs text-slate-500">
+                            <i class="fa-solid fa-list-check text-[11px]"></i>
+                            <span>${completedSubtasks}/${totalSubtasks} subtasks</span>
+                        </div>
+                    ` : ''}
+
+                    <!-- Footer Info (Date, Time, Actions) -->
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400">
+                        <div class="flex items-center gap-3">
+                            ${t.dueDate ? `
+                                <span class="flex items-center gap-1 ">
+                                    <i class="fa-regular fa-calendar text-[10px]"></i> ${t.dueDate}
+                                </span>
+                            ` : ''}
+                            ${t.estTime ? `
+                                <span class="flex items-center gap-1">
+                                    <i class="fa-regular fa-clock text-[10px]"></i> ${t.estTime}
+                                </span>
+                            ` : ''}
+                        </div>
+
+                        <!-- Dropdown Actions -->
+                        <div class="flex items-center gap-1">
+                            <button onclick="deleteTask('${t.id}')" class="p-3 text-lg hover:text-rose-500 transition-colors" title="Archive"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="toggleArchiveTask('${t.id}')" class="p-3 text-lg hover:text-amber-500 transition-colors" title="Edit"><i class="fa-solid fa-box-archive"></i></button>
+                            <button onclick="openEditModal('${t.id}')" class="p-0 text-[6px] text-slate-200 dark:text-slate-800"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // List Row HTML template
+        function renderListRow(t) {
+            const priorityColors = {
+                Low: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+                Medium: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+                High: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+                Urgent: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+            };
+
+            const statusColors = {
+                'To Do': 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400',
+                'In Progress': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400',
+                'Completed': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400'
+            };
+
+            return `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                    <td class="p-4 font-semibold text-slate-800 dark:text-slate-100">
+                        ${escapeHtml(t.title)}
+                        ${t.description ? `<p class="text-xs font-normal text-slate-400 line-clamp-1">${escapeHtml(t.description)}</p>` : ''}
+                    </td>
+                    <td class="p-4">
+                        <select onchange="updateTaskStatusQuick('${t.id}', this.value)" class="text-xs font-semibold px-2.5 py-1 rounded-full ${statusColors[t.status]} border-0 focus:ring-1 focus:ring-indigo-500 cursor-pointer">
+                            <option value="To Do" ${t.status === 'To Do' ? 'selected' : ''}>To Do</option>
+                            <option value="In Progress" ${t.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="Completed" ${t.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                        </select>
+                    </td>
+                    <td class="p-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${priorityColors[t.priority]}">${t.priority}</span></td>
+                    <td class="p-4"><span class="text-xs font-medium text-slate-600 dark:text-slate-400">${t.category}</span></td>
+                    <td class="p-4 text-xs text-slate-500">${t.dueDate || 'No due date'}</td>
+                    <td class="p-4 text-xs text-slate-500">${t.estTime || '-'}</td>
+                    <td class="p-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <button onclick="deleteTask('${t.id}')" class="p-2 text-lg hover:text-rose-500 transition-colors" title="Archive"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="toggleArchiveTask('${t.id}')" class="p-2 text-lg hover:text-amber-500 transition-colors" title="Edit"><i class="fa-solid fa-box-archive"></i></button>
+                            <button onclick="openEditModal('${t.id}')" class="p-0 text-[6px] text-slate-200 dark:text-slate-800"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // View Switching
+        function switchView(view) {
+            currentView = view;
+            const kanbanEl = document.getElementById('kanban-view');
+            const listEl = document.getElementById('list-view');
+            const btnKanban = document.getElementById('view-btn-kanban');
+            const btnList = document.getElementById('view-btn-list');
+
+            if (view === 'kanban') {
+                kanbanEl.classList.remove('hidden');
+                listEl.classList.add('hidden');
+                btnKanban.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-500 transition-all";
+                btnList.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-all";
+            } else {
+                kanbanEl.classList.add('hidden');
+                listEl.classList.remove('hidden');
+                btnList.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-500 transition-all";
+                btnKanban.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-all";
+            }
+        }
+
+        // Archive Toggle View
+        function toggleArchiveView() {
+            showArchived = !showArchived;
+            const btn = document.getElementById('archive-toggle-btn');
+            const btnText = document.getElementById('archive-btn-text');
+            if (showArchived) {
+                btn.className = "px-3 py-2 rounded-xl text-xs font-semibold bg-amber-500 text-white shadow-sm flex items-center gap-1.5 transition-all";
+                btnText.innerText = "Viewing Archive";
+                showToast("Switched to Archive view", "info");
+            } else {
+                btn.className = "px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-darkBorder text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all flex items-center gap-1.5";
+                btnText.innerText = "Archive";
+                showToast("Switched to Active tasks", "info");
+            }
+            renderApp();
+        }
+
+        // Drag and Drop functionality
+        function drag(event, taskId) {
+            event.dataTransfer.setData('text/plain', taskId);
+        }
+
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        function dropTask(event, newStatus) {
+            event.preventDefault();
+            const taskId = event.dataTransfer.getData('text/plain');
+            const task = tasks.find(t => t.id === taskId);
+            if (task && task.status !== newStatus) {
+                task.status = newStatus;
+                saveTasks();
+                showToast(`Task moved to "${newStatus}"`, 'success');
+            }
+        }
+
+        function updateTaskStatusQuick(taskId, newStatus) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.status = newStatus;
+                saveTasks();
+                showToast(`Status updated to "${newStatus}"`, 'success');
+            }
+        }
+
+        // Modal Management
+        function openModal() {
+            document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-indigo-600"></i> Create New Task`;
+            document.getElementById('task-id').value = '';
+            document.getElementById('task-form').reset();
+            document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('subtasks-container').innerHTML = '';
+            addSubtaskInput(); // add one blank subtask input by default
+            document.getElementById('task-modal').classList.remove('hidden');
+        }
+
+        function openModalWithStatus(status) {
+            openModal();
+            document.getElementById('form-status').value = status;
+        }
+
+        function openEditModal(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-indigo-600"></i> Edit Task`;
+            document.getElementById('task-id').value = task.id;
+            document.getElementById('form-title').value = task.title;
+            document.getElementById('form-desc').value = task.description || '';
+            document.getElementById('form-priority').value = task.priority;
+            document.getElementById('form-status').value = task.status;
+            document.getElementById('form-category').value = task.category;
+            document.getElementById('form-date').value = task.dueDate || '';
+            document.getElementById('form-time').value = task.estTime || '';
+
+            // Render subtasks
+            const subContainer = document.getElementById('subtasks-container');
+            subContainer.innerHTML = '';
+            if (task.subtasks && task.subtasks.length > 0) {
+                task.subtasks.forEach(sub => {
+                    addSubtaskInput(sub.title, sub.completed);
+                });
+            } else {
+                addSubtaskInput();
+            }
+
+            document.getElementById('task-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('task-modal').classList.add('hidden');
+        }
+
+        // Subtasks dynamic inputs in form
+        function addSubtaskInput(title = '', completed = false) {
+            const container = document.getElementById('subtasks-container');
+            const div = document.createElement('div');
+            div.className = "flex items-center gap-2";
+            div.innerHTML = `
+                <input type="checkbox" ${completed ? 'checked' : ''} class="subtask-check w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+                <input type="text" value="${escapeHtml(title)}" placeholder="Subtask item description..." 
+                    class="subtask-input flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-darkBorder rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-rose-500 p-1"><i class="fa-solid fa-xmark text-xs"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        // Handle Task Form Submit (Create or Update)
+        function handleTaskSubmit(event) {
+            event.preventDefault();
+            const taskId = document.getElementById('task-id').value;
+            const title = document.getElementById('form-title').value.trim();
+            const description = document.getElementById('form-desc').value.trim();
+            const priority = document.getElementById('form-priority').value;
+            const status = document.getElementById('form-status').value;
+            const category = document.getElementById('form-category').value;
+            const dueDate = document.getElementById('form-date').value;
+            const estTime = document.getElementById('form-time').value.trim();
+
+            // Collect subtasks
+            const subtaskRows = document.querySelectorAll('#subtasks-container > div');
+            const subtasks = [];
+            subtaskRows.forEach(row => {
+                const textInput = row.querySelector('.subtask-input');
+                const checkInput = row.querySelector('.subtask-check');
+                if (textInput && textInput.value.trim() !== '') {
+                    subtasks.push({
+                        title: textInput.value.trim(),
+                        completed: checkInput ? checkInput.checked : false
+                    });
+                }
+            });
+
+            if (taskId) {
+                // Update existing
+                const task = tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.title = title;
+                    task.description = description;
+                    task.priority = priority;
+                    task.status = status;
+                    task.category = category;
+                    task.dueDate = dueDate;
+                    task.estTime = estTime;
+                    task.subtasks = subtasks;
+                    showToast('Task updated successfully!', 'success');
+                }
+            } else {
+                // Create new
+                const newTask = {
+                    id: 'task-' + Date.now(),
+                    title,
+                    description,
+                    priority,
+                    status,
+                    category,
+                    dueDate,
+                    estTime,
+                    subtasks,
+                    archived: false,
+                    createdAt: new Date().toISOString()
+                };
+                tasks.unshift(newTask);
+                showToast('New task created successfully!', 'success');
+            }
+
+            closeModal();
+            saveTasks();
+        }
+
+        // Delete & Archive Task
+        function deleteTask(taskId) {
+            if (true) {
+                tasks = tasks.filter(t => t.id !== taskId);
+                saveTasks();
+                showToast('Done', 'info');
+            }
+        }
+
+        function toggleArchiveTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.archived = !task.archived;
+                saveTasks();
+                showToast(task.archived ? 'Task moved to archive' : 'Task restored from archive', 'success');
+            }
+        }
+
+        // Filters reset
+        function applyFilters() {
+            renderKanbanOrList();
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-date').value = 'all';
+            document.getElementById('filter-priority').value = 'all';
+            document.getElementById('filter-category').value = 'all';
+            document.getElementById('filter-status').value = 'all';
+            document.getElementById('global-search').value = '';
+            renderKanbanOrList();
+            showToast('Filters reset', 'info');
+        }
+
+        // Search live listener
+        document.getElementById('global-search').addEventListener('input', () => {
+            renderKanbanOrList();
+        });
+
+        // Keyboard Shortcuts
+        function setupKeyboardShortcuts() {
+            window.addEventListener('keydown', (e) => {
+                // Ignore if typing in input or modal open inappropriately
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                    return;
+                }
+
+                if (e.key === '/') {
+                    e.preventDefault();
+                    document.getElementById('global-search').focus();
+                } else if (e.key.toLowerCase() === 'n') {
+                    e.preventDefault();
+                    openModal();
+                }
+            });
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = "fa-solid fa-sun";
+                localStorage.setItem('tasksphere_theme', 'light');
+            } else {
+                html.classList.add('dark');
+                icon.className = "fa-solid fa-moon";
+                localStorage.setItem('tasksphere_theme', 'dark');
+            }
+        }
+
+        // Load saved theme preference
+        if (localStorage.getItem('tasksphere_theme') === 'light') {
+            document.documentElement.classList.remove('dark');
+            document.getElementById('theme-icon').className = "fa-solid fa-sun";
+        }
+
+        // JSON Export / Import Backup
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasks, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `tasksphere_backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+            showToast('Backup exported successfully!', 'success');
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        tasks = imported;
+                        saveTasks();
+                        showToast('Backup imported successfully!', 'success');
+                    } else {
+                        showToast('Invalid backup file format.', 'error');
+                    }
+                } catch (err) {
+                    showToast('Failed to parse JSON file.', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgColors = {
+                success: 'bg-emerald-600 text-white',
+                error: 'bg-rose-600 text-white',
+                info: 'bg-slate-800 text-white dark:bg-slate-700'
+            };
+
+            const icons = {
+                success: 'fa-circle-check',
+                error: 'fa-triangle-exclamation',
+                info: 'fa-circle-info'
+            };
+
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl text-[8px] font-light opacity-60 ${bgColors[type]} transform translate-y-2 opacity-0 transition-all duration-300`;
+            toast.innerHTML = `<i class="fa-solid ${icons[type]} text-sm"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 100);
+            }, 500);
+        }
+
+        // Helper sanitizer
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    
+}
+</script>
+
+    <!-- Nag popup -->
+    <div id="nag" class="fixed inset-0 z-[100] bg-black/70 hidden items-center justify-center p-4">
+        <div class="bg-yellow-300 text-black rounded-3xl p-10 max-w-lg w-full text-center relative shadow-2xl">
+            <button onclick="dismissNag(false)" class="absolute top-1 right-2 text-[6px] text-yellow-300/90">x</button>
+            <h2 class="text-4xl font-black mb-4">🎉 WAIT!!! 🎉</h2>
+            <p class="text-lg mb-6">Upgrade to TaskSphere ULTRA MAX to unlock the ability to keep using the features you already have!</p>
+            <button onclick="dismissNag(true)" class="bg-fuchsia-600 text-white text-2xl font-black px-10 py-5 rounded-full w-full mb-3">YES, I LOVE PRODUCTIVITY</button>
+            <button onclick="dismissNag(false)" class="text-[8px] text-yellow-400">no thanks, I prefer being unproductive and sad</button>
+        </div>
+    </div>
+    <script>
+if (!document.documentElement.classList.contains('calm')) {
+
+        function showNag() { const n = document.getElementById('nag'); n.classList.remove('hidden'); n.classList.add('flex'); }
+        function dismissNag(accepted) {
+            const n = document.getElementById('nag');
+            n.classList.add('hidden'); n.classList.remove('flex');
+            if (accepted) showToast('Trial activated. Card required.', 'info');
+        }
+        setTimeout(showNag, 2500);
+        setInterval(showNag, 25000);
+    
+}
+</script>
+
+    <style>
+        body { cursor: wait; text-align: justify; }
+        button, a, label, select, input, [draggable] { cursor: not-allowed !important; }
+        main { transform: rotate(-0.7deg); transform-origin: top left; }
+        [draggable="true"]:nth-child(odd)  { transform: rotate(2.2deg); margin-left: 14px; }
+        [draggable="true"]:nth-child(even) { transform: rotate(-1.8deg); margin-right: 18px; }
+        [draggable="true"]:hover { transform: scale(0.94) rotate(4deg); }
+        #stat-total, #stat-overdue { animation: blinker 0.9s steps(2, start) infinite; }
+        @keyframes blinker { to { visibility: hidden; } }
+        #help-bubble { animation: bob 1.1s ease-in-out infinite; }
+        @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-22px); } }
+        #loading-veil { position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; flex-direction: column; color: #fff; font-size: 22px; }
+        #loading-veil.on { display: flex; }
+        .spinner { width: 64px; height: 64px; border: 8px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 1.4s linear infinite; margin-bottom: 16px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #cookie-bar { position: fixed; left: 0; right: 0; bottom: 0; height: 38vh; z-index: 80; background: #7c3aed; color: #fff; padding: 24px; display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; text-align: center; }
+        #session-veil { position: fixed; inset: 0; z-index: 120; background: #dc2626; color: #fff; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px; font-size: 28px; font-weight: 900; text-align: center; padding: 20px; }
+        #session-veil.on { display: flex; }
+        #session-btn { position: relative; background: #fff; color: #dc2626; padding: 12px 24px; border-radius: 12px; font-size: 18px; }
+    </style>
+
+    <div id="loading-veil"><div class="spinner"></div><div>Optimizing your experience…</div></div>
+
+    <div id="cookie-bar">
+        <div style="font-size:26px;font-weight:900">🍪 We value your privacy (a lot)</div>
+        <div style="font-size:13px;max-width:640px">We and our 1,847 partners use cookies to remember that you were here, guess why, and sell the guess. Please accept so we can continue ignoring your preferences.</div>
+        <button onclick="acceptCookies()" style="background:#fbbf24;color:#000;font-weight:900;font-size:22px;padding:14px 60px;border-radius:999px">ACCEPT ALL</button>
+        <button onclick="showToast('Rejecting is not available in your region','error')" style="font-size:7px;color:#8b5cf6">manage preferences</button>
+    </div>
+
+    <div id="session-veil">
+        <div>⏰ Your session has expired due to inactivity</div>
+        <div style="font-size:14px;font-weight:400">For your security, please confirm you are still there. <span id="session-count">3</span> more confirmations required.</div>
+        <button id="session-btn" onmouseenter="dodgeSession()" onclick="confirmSession()">I'm still here</button>
+    </div>
+
+    <button id="help-bubble" onclick="alert('All of our agents are currently busy.\nEstimated wait time: 4h 12m.\nYou are number 3,481 in the queue.')"
+        style="position:fixed;right:18px;bottom:42vh;z-index:85;background:#06b6d4;color:#fff;font-weight:800;padding:14px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.4)">👋 Need help?</button>
+
+    <script>
+if (!document.documentElement.classList.contains('calm')) {
+
+    (function () {
+        // 1. Every render hides behind a fake loading screen
+        const _renderApp = window.renderApp;
+        let veilTimer = null;
+        window.renderApp = function () {
+            const veil = document.getElementById('loading-veil');
+            veil.classList.add('on');
+            clearTimeout(veilTimer);
+            veilTimer = setTimeout(() => { _renderApp(); veil.classList.remove('on'); }, 1600);
+        };
+
+        // 2. Drag and drop sends the task to a random column
+        const _dropTask = window.dropTask;
+        window.dropTask = function (event, newStatus) {
+            const all = ['To Do', 'In Progress', 'Completed'];
+            _dropTask(event, all[Math.floor(Math.random() * all.length)]);
+        };
+
+        // 3. Saving requires a pointless arithmetic "human check"
+        const _submit = window.handleTaskSubmit;
+        window.handleTaskSubmit = function (event) {
+            event.preventDefault();
+            const a = 7 + Math.floor(Math.random() * 9), b = 3 + Math.floor(Math.random() * 7), c = 11 + Math.floor(Math.random() * 40);
+            const ans = prompt('Verify you are human (answer to save):\n\n' + a + ' × ' + b + ' + ' + c + ' = ?');
+            if (parseInt(ans, 10) !== a * b + c) { alert('Incorrect. Your task has been discarded. Please start over.'); closeModal(); return; }
+            _submit(event);
+        };
+
+        // 4. New-task modal defaults to Urgent and a date in 1970; title must be long
+        const _openModal = window.openModal;
+        window.openModal = function () {
+            _openModal();
+            document.getElementById('form-priority').value = 'Urgent';
+            document.getElementById('form-date').value = '1970-01-01';
+            const t = document.getElementById('form-title');
+            t.setAttribute('minlength', '25');
+            t.setCustomValidity('');
+            t.oninvalid = () => t.setCustomValidity('Please lengthen this text to 25 characters or more');
+            t.oninput = () => t.setCustomValidity('');
+        };
+
+        // 5. Search only reacts after a 2.5 second lag
+        const s = document.getElementById('global-search');
+        const c = s.cloneNode(true);
+        s.replaceWith(c);
+        let st = null;
+        c.addEventListener('input', () => { clearTimeout(st); st = setTimeout(renderKanbanOrList, 2500); });
+
+        // 6. Cookie banner returns after a while
+        window.acceptCookies = function () {
+            document.getElementById('cookie-bar').style.display = 'none';
+            setTimeout(() => { document.getElementById('cookie-bar').style.display = 'flex'; }, 30000);
+        };
+
+        // 7. Fake session timeout: needs several clicks on a button that runs away
+        let idle = null, left = 3;
+        function resetIdle() { clearTimeout(idle); idle = setTimeout(() => { left = 3; document.getElementById('session-count').innerText = left; document.getElementById('session-veil').classList.add('on'); }, 120000); }
+        ['mousemove', 'keydown', 'click', 'scroll'].forEach(ev => window.addEventListener(ev, () => { if (!document.getElementById('session-veil').classList.contains('on')) resetIdle(); }));
+        resetIdle();
+        window.dodgeSession = function () {
+            const b = document.getElementById('session-btn');
+            b.style.left = (Math.random() * 300 - 150) + 'px';
+            b.style.top = (Math.random() * 160 - 80) + 'px';
+        };
+        window.confirmSession = function () {
+            left--;
+            document.getElementById('session-count').innerText = Math.max(left, 0);
+            if (left <= 0) { document.getElementById('session-veil').classList.remove('on'); resetIdle(); }
+        };
+
+        // 8. Theme toggle flips the theme, then flips it back a moment later
+        const _toggleTheme = window.toggleTheme;
+        window.toggleTheme = function () { _toggleTheme(); setTimeout(_toggleTheme, 900); };
+
+        // 9. The tiny Ok button dodges the mouse
+        document.addEventListener('mouseover', (e) => {
+            const b = e.target.closest('#task-form button[type="submit"]');
+            if (b && Math.random() < 0.6) { b.style.position = 'relative'; b.style.left = (Math.random() * 200 - 160) + 'px'; b.style.top = (Math.random() * 40 - 20) + 'px'; }
+        });
+    })();
+    
+}
+</script>
+
+    <style>
+        /* real cursor stays visible */
+        #fake-cursor { position: fixed; left: 0; top: 0; z-index: 99999; pointer-events: none; font-size: 28px; transform: translate(60px, 45px); filter: drop-shadow(0 2px 2px rgba(0,0,0,.5)); }
+        h4 { max-width: 7ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #rating-veil { position: fixed; inset: 0; z-index: 110; background: rgba(15,23,42,.92); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 16px; color: #fff; text-align: center; padding: 20px; }
+        #rating-veil.on { display: flex; }
+        .star { font-size: 54px; filter: grayscale(1); transition: filter .1s; }
+        .star:hover, .star:hover ~ .star { filter: grayscale(0); }
+        .more-btn { font-size: 8px; color: #94a3b8; text-align: left; padding: 2px; }
+    </style>
+
+    <div id="fake-cursor">↖</div>
+
+    <div id="rating-veil">
+        <div style="font-size:30px;font-weight:900">How was your experience saving that task?</div>
+        <div id="stars" style="display:flex;gap:6px;flex-direction:row-reverse">
+            <button class="star" onclick="rate(5)">⭐</button><button class="star" onclick="rate(4)">⭐</button><button class="star" onclick="rate(3)">⭐</button><button class="star" onclick="rate(2)">⭐</button><button class="star" onclick="rate(1)">⭐</button>
+        </div>
+        <div id="rating-msg" style="font-size:14px;min-height:20px">Only 5-star ratings can be submitted.</div>
+        <button onclick="rate(0)" style="font-size:5px;color:#1e293b">skip</button>
+    </div>
+
+    <script>
+if (!document.documentElement.classList.contains('calm')) {
+
+    (function () {
+        // 1. Fake cursor sits offset from the real pointer, so clicks land somewhere else
+        const fc = document.getElementById('fake-cursor');
+        window.addEventListener('mousemove', e => { fc.style.left = e.clientX + 'px'; fc.style.top = e.clientY + 'px'; });
+
+        // 2. Scroll direction is inverted everywhere
+        window.addEventListener('wheel', e => {
+            e.preventDefault();
+            const el = e.target.closest ? e.target.closest('.overflow-y-auto') : null;
+            (el || window).scrollBy(0, -e.deltaY);
+        }, { passive: false });
+
+        // 3. Right-click and paste are blocked
+        window.addEventListener('contextmenu', e => { e.preventDefault(); alert('Right-click is disabled to protect your productivity.'); });
+        window.addEventListener('paste', e => { e.preventDefault(); showToast('Pasting is not supported. Please retype.', 'error'); }, true);
+
+        // 4. Text fields scramble capitalisation as you type
+        document.addEventListener('input', e => {
+            const t = e.target;
+            if (t.tagName === 'INPUT' && (t.type === 'text' || t.type === 'search') || t.tagName === 'TEXTAREA') {
+                let i = 0;
+                t.value = t.value.split('').map(ch => (i++ % 2 ? ch.toUpperCase() : ch.toLowerCase())).join('');
+            }
+        }, true);
+
+        // 5. Needless confirmations on harmless actions
+        ['switchView', 'toggleArchiveView', 'resetFilters'].forEach(name => {
+            const orig = window[name];
+            window[name] = function () {
+                if (!confirm('Are you sure you want to do this? Any unsaved changes may or may not be lost.')) return;
+                if (!confirm('Really sure? This action may affect your workflow.')) return;
+                return orig.apply(this, arguments);
+            };
+        });
+
+        // 6. Only one card per column; "load more" reveals one at a time
+        const _render = window.renderKanbanOrList;
+        window.renderKanbanOrList = function () {
+            _render();
+            ['kanban-todo', 'kanban-inprogress', 'kanban-completed'].forEach(id => {
+                const col = document.getElementById(id);
+                const cards = [...col.querySelectorAll('[draggable]')];
+                if (cards.length <= 1) return;
+                cards.slice(1).forEach(c => c.style.display = 'none');
+                const btn = document.createElement('button');
+                btn.className = 'more-btn';
+                btn.textContent = 'load more (' + (cards.length - 1) + ' hidden)';
+                let shown = 1;
+                btn.onclick = () => {
+                    if (shown < cards.length) cards[shown++].style.display = '';
+                    if (shown >= cards.length) btn.remove();
+                    else btn.textContent = 'load more (' + (cards.length - shown) + ' hidden)';
+                };
+                col.appendChild(btn);
+            });
+        };
+
+        // 7. Letter-key shortcuts that trigger unrelated actions
+        window.addEventListener('keydown', e => {
+            const tag = e.target.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.ctrlKey || e.metaKey) return;
+            const k = e.key.toLowerCase();
+            if (k === 'a') toggleArchiveView();
+            else if (k === 'd') toggleTheme();
+            else if (k === 'v') switchView(Math.random() < 0.5 ? 'kanban' : 'list');
+            else if (k === 'r') resetFilters();
+        });
+
+        // 8. Form times out after 25 seconds and throws away what you typed
+        let formTimer = null;
+        const _open = window.openModal;
+        window.openModal = function () {
+            _open();
+            clearTimeout(formTimer);
+            formTimer = setTimeout(() => {
+                if (!document.getElementById('task-modal').classList.contains('hidden')) {
+                    closeModal();
+                    showToast('Form timed out', 'error');
+                }
+            }, 25000);
+        };
+        const _openEdit = window.openEditModal;
+        window.openEditModal = function (id) {
+            _openEdit(id);
+            clearTimeout(formTimer);
+            formTimer = setTimeout(() => {
+                if (!document.getElementById('task-modal').classList.contains('hidden')) { closeModal(); showToast('Form timed out', 'error'); }
+            }, 25000);
+        };
+
+        // 9. Random tab order inside the form
+        const form = document.getElementById('task-form');
+        new MutationObserver(() => {
+            form.querySelectorAll('input, select, textarea, button').forEach(el => el.tabIndex = 1 + Math.floor(Math.random() * 9));
+        }).observe(form, { childList: true, subtree: true });
+        form.querySelectorAll('input, select, textarea, button').forEach(el => el.tabIndex = 1 + Math.floor(Math.random() * 9));
+
+        // 10. Mandatory 5-star survey after every save
+        const _submit = window.handleTaskSubmit;
+        window.handleTaskSubmit = function (event) {
+            _submit(event);
+            setTimeout(() => { document.getElementById('rating-msg').innerText = 'Only 5-star ratings can be submitted.'; document.getElementById('rating-veil').classList.add('on'); }, 2200);
+        };
+        window.rate = function (n) {
+            const msg = document.getElementById('rating-msg');
+            if (n === 5 || n === 0) { document.getElementById('rating-veil').classList.remove('on'); return; }
+            msg.innerText = "We\u2019re sorry you feel that way. Please reconsider your rating.";
+        };
+    })();
+    
+}
+</script>
+
+    <style>
+        body { user-select: none; -webkit-user-select: none; }
+        [draggable="true"] { filter: blur(2.5px); }
+        [draggable="true"]:hover { filter: none; }
+        #task-modal > div { animation: drift 5s ease-in-out infinite; }
+        @keyframes drift { 0%,100% { transform: translateX(-60px); } 50% { transform: translateX(60px); } }
+        #ticker { background: #facc15; color: #111; font-weight: 800; font-size: 15px; overflow: hidden; white-space: nowrap; padding: 6px 0; }
+        #ticker span { display: inline-block; padding-left: 100%; animation: tick 7s linear infinite; }
+        @keyframes tick { to { transform: translateX(-100%); } }
+        #restart-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 95; height: 36px; background: #b91c1c; color: #fff; font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+    </style>
+
+    <div id="restart-bar">⚠ Mandatory update: TaskSphere will restart in <span id="restart-count" style="margin-left:6px">0:59</span></div>
+
+    <script>
+if (!document.documentElement.classList.contains('calm')) {
+
+    (function () {
+        // 1. Layout reshuffles on every render: columns, stat cards, filters, header buttons
+        function shuffleLayout() {
+            const groups = [
+                document.getElementById('kanban-view'),
+                document.querySelector('main > section.grid'),
+                document.getElementById('filter-date').parentElement,
+                document.querySelector('header > div:last-child')
+            ];
+            groups.forEach(g => g && [...g.children].forEach(c => c.style.order = Math.floor(Math.random() * 10)));
+        }
+        const _render = window.renderKanbanOrList;
+        window.renderKanbanOrList = function () { _render(); shuffleLayout(); };
+        shuffleLayout();
+
+        // 2. Every button press registers after a 0.9 second delay
+        document.addEventListener('click', e => {
+            const b = e.target.closest && e.target.closest('button');
+            if (!b) return;
+            if (b.dataset.replay) { delete b.dataset.replay; return; }
+            e.stopImmediatePropagation();
+            e.preventDefault();
+            setTimeout(() => { b.dataset.replay = '1'; b.click(); }, 900);
+        }, true);
+
+        // 3. Page zoom creeps up, then snaps back
+        let z = 1;
+        setInterval(() => { z += 0.03; if (z > 1.4) z = 0.75; document.documentElement.style.zoom = z; }, 4000);
+
+        // 4. Inputs lose focus every 12 seconds
+        setInterval(() => {
+            const a = document.activeElement;
+            if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
+        }, 12000);
+
+        // 5. Fast-scrolling "tips" ticker above the content
+        const tk = document.createElement('div');
+        tk.id = 'ticker';
+        tk.innerHTML = '<span>💡 PRO TIP: Productivity is a state of mind. &nbsp;•&nbsp; Did you know? You can do the thing by doing it. &nbsp;•&nbsp; TaskSphere ULTRA MAX is 14% more ULTRA. &nbsp;•&nbsp; Your task list is important to us.</span>';
+        const main = document.querySelector('main');
+        main.parentNode.insertBefore(tk, main);
+
+        // 6. Restart countdown that is always "postponed"
+        let t = 59;
+        const rc = document.getElementById('restart-count');
+        setInterval(() => {
+            t--;
+            if (t < 0) { rc.parentElement.firstChild.textContent = '⚠ Restart postponed. You will be reminded in '; t = 59; }
+            rc.textContent = '0:' + String(t).padStart(2, '0');
+        }, 1000);
+    })();
+    
+}
+</script>
+
+    <style>
+        main > section:nth-child(2) { margin-bottom: 70vh; }
+        .decoy { position: fixed; left: 0; top: 0; z-index: 99998; pointer-events: none; font-size: 28px; opacity: .85; }
+        #tc-veil, #ad-veil { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 14px; padding: 20px; text-align: center; }
+        #tc-veil { z-index: 130; background: rgba(2,6,23,.96); color: #fff; }
+        #ad-veil { z-index: 125; background: linear-gradient(135deg,#f97316,#db2777,#7c3aed); color: #fff; }
+        #tc-veil.on, #ad-veil.on { display: flex; }
+        #tc-box { width: min(640px, 92vw); height: 40vh; background: #fff; color: #111; padding: 16px; font-size: 12px; text-align: left; border-radius: 8px; }
+        #tc-accept:disabled { opacity: .35; }
+    </style>
+
+    <div class="decoy">↖</div><div class="decoy">↖</div><div class="decoy">↖</div>
+
+    <div id="tc-veil">
+        <div style="font-size:26px;font-weight:900">Terms &amp; Conditions</div>
+        <div id="tc-box" class="overflow-y-auto">By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them. By using TaskSphere you agree that you have read, understood and forgotten these terms, and that the terms may change while you are reading them.</div>
+        <button id="tc-accept" disabled onclick="document.getElementById('tc-veil').classList.remove('on')" style="background:#22c55e;color:#000;font-weight:900;padding:12px 40px;border-radius:999px">I have read and agree to everything</button>
+    </div>
+
+    <div id="ad-veil">
+        <div style="font-size:14px;letter-spacing:.3em">ADVERTISEMENT</div>
+        <div style="font-size:46px;font-weight:900">Tired of being productive?</div>
+        <div style="font-size:20px">Try <b>RelaxSphere™</b>. It does nothing, beautifully.</div>
+        <div>Your task manager will resume in <b id="ad-count">12</b> seconds</div>
+        <button id="ad-skip" onclick="document.getElementById('ad-veil').classList.remove('on')" style="display:none;font-size:7px;color:#fdba74">skip ad</button>
+    </div>
+
+    <script>
+if (!document.documentElement.classList.contains('calm')) {
+
+    (function () {
+        // 1. Filter dropdown labels are shuffled, so a label no longer matches what it filters
+        const pf = document.getElementById('filter-priority');
+        const opts = [...pf.options].filter(o => o.value !== 'all');
+        const texts = opts.map(o => o.text).sort(() => Math.random() - 0.5);
+        opts.forEach((o, i) => o.text = texts[i]);
+
+        // 2. Due dates are shown as "Day N of YEAR" instead of a date
+        function rewriteDates() {
+            ['kanban-view', 'list-tbody'].forEach(id => {
+                const root = document.getElementById(id);
+                const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+                const nodes = [];
+                while (w.nextNode()) nodes.push(w.currentNode);
+                nodes.forEach(n => {
+                    n.nodeValue = n.nodeValue.replace(/(\d{4})-(\d{2})-(\d{2})/g, (m, y, mo, d) => {
+                        const doy = Math.round((new Date(+y, +mo - 1, +d) - new Date(+y, 0, 0)) / 864e5);
+                        return 'Day ' + doy + ' of ' + y;
+                    });
+                });
+            });
+        }
+        const _render = window.renderKanbanOrList;
+        window.renderKanbanOrList = function () { _render(); rewriteDates(); };
+
+        // 3. Extra decoy cursors trail the fake one at different offsets and lags
+        const decoys = [...document.querySelectorAll('.decoy')];
+        const offs = [[-70, 30, 90], [40, -60, 180], [-20, 80, 300]];
+        let mx = 0, my = 0;
+        window.addEventListener('mousemove', e => {
+            mx = e.clientX; my = e.clientY;
+            decoys.forEach((d, i) => setTimeout(() => { d.style.left = (mx + offs[i][0]) + 'px'; d.style.top = (my + offs[i][1]) + 'px'; }, offs[i][2]));
+        });
+
+        // 4. Typed characters sometimes get doubled
+        document.addEventListener('input', e => {
+            const t = e.target;
+            if ((t.tagName === 'INPUT' && t.type === 'text') || t.tagName === 'TEXTAREA') {
+                if (e.inputType === 'insertText' && e.data && Math.random() < 0.12) t.value += e.data;
+            }
+        });
+
+        // 5. Description capped at 30 characters
+        document.getElementById('form-desc').setAttribute('maxlength', '30');
+
+        // 6. Tab title keeps trying to get your attention
+        const titles = ['(1) New notification!', '⚠ Action required', 'We miss you 😢', 'TaskSphere'];
+        let ti = 0;
+        setInterval(() => { document.title = titles[ti++ % titles.length]; }, 2000);
+
+        // 7. Page font changes every few seconds
+        const fonts = ["'Comic Sans MS', cursive", "'Courier New', monospace", "Georgia, serif", "Impact, fantasy", "'Brush Script MT', cursive"];
+        let fi = 0;
+        setInterval(() => { document.body.style.fontFamily = fonts[++fi % fonts.length]; }, 6000);
+
+        // 8. Leaving the page asks for confirmation
+        window.addEventListener('beforeunload', e => { e.preventDefault(); e.returnValue = ''; });
+
+        // 9. Terms & Conditions: Accept only enables once you scroll to the very bottom
+        setTimeout(() => document.getElementById('tc-veil').classList.add('on'), 6000);
+        const box = document.getElementById('tc-box');
+        box.addEventListener('scroll', () => {
+            if (box.scrollTop + box.clientHeight >= box.scrollHeight - 4) document.getElementById('tc-accept').disabled = false;
+        });
+
+        // 10. Unskippable-for-12-seconds ad break, repeated
+        function showAd() {
+            const v = document.getElementById('ad-veil');
+            let n = 12;
+            document.getElementById('ad-count').textContent = n;
+            document.getElementById('ad-skip').style.display = 'none';
+            v.classList.add('on');
+            const iv = setInterval(() => {
+                n--;
+                document.getElementById('ad-count').textContent = Math.max(n, 0);
+                if (n <= 0) { clearInterval(iv); document.getElementById('ad-skip').style.display = 'block'; }
+            }, 1000);
+        }
+        setTimeout(showAd, 40000);
+        setInterval(showAd, 90000);
+    })();
+    
+}
+</script>
+
+    <style>
+        .subtask-check { width: 6px !important; height: 6px !important; }
+        #watermark { position: fixed; inset: 0; z-index: 70; pointer-events: none; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        #watermark div { font-size: 96px; font-weight: 900; color: rgba(148,163,184,.22); transform: rotate(-28deg); white-space: nowrap; line-height: 1.4; text-align: center; }
+        #login-veil { position: fixed; inset: 0; z-index: 140; background: #0f172a; display: none; align-items: center; justify-content: center; }
+        #login-veil.on { display: flex; }
+        #login-card { background: #fff; color: #111; padding: 28px; border-radius: 14px; width: min(380px, 92vw); display: flex; flex-direction: column; gap: 12px; }
+        #login-card input { border: 1px solid #94a3b8; border-radius: 8px; padding: 8px 10px; font-size: 14px; width: 100%; }
+        #perm-box { position: fixed; top: 48px; left: 12px; z-index: 99990; background: #fff; color: #111; border: 1px solid #94a3b8; border-radius: 10px; padding: 14px; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,.35); display: none; font-size: 13px; }
+        #perm-box.on { display: block; }
+    </style>
+
+    <div id="watermark"><div>UNLICENSED COPY<br>UNLICENSED COPY<br>UNLICENSED COPY</div></div>
+
+    <div id="login-veil">
+        <form id="login-card" autocomplete="off">
+            <div style="font-size:22px;font-weight:900">Sign in to TaskSphere</div>
+            <input id="login-user" type="text" placeholder="Username">
+            <input id="login-pass" type="password" placeholder="Password">
+            <div id="login-msg" style="font-size:12px;color:#b91c1c;min-height:16px"></div>
+            <button type="submit" style="background:#4f46e5;color:#fff;font-weight:800;padding:8px;border-radius:8px">Sign in</button>
+            <div style="font-size:9px;color:#94a3b8">Forgot password? There is no recovery. Choose wisely.</div>
+        </form>
+    </div>
+
+    <div id="perm-box">
+        <div style="font-weight:800;margin-bottom:6px">taskmanager.app wants to</div>
+        <div style="margin-bottom:10px">• Know your location<br>• See your clipboard<br>• Send you notifications every 4 minutes</div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button onclick="document.getElementById('perm-box').classList.remove('on')" style="background:#e2e8f0;padding:6px 14px;border-radius:6px">Allow</button>
+            <button onclick="document.getElementById('perm-box').classList.remove('on')" style="background:#4f46e5;color:#fff;padding:6px 14px;border-radius:6px;font-weight:800">Allow (recommended)</button>
+        </div>
+    </div>
+
+    <script>
+if (!document.documentElement.classList.contains('calm')) {
+
+    (function () {
+        // 1. Sign-in wall with password rules revealed one failure at a time
+        const veil = document.getElementById('login-veil');
+        setTimeout(() => veil.classList.add('on'), 2000);
+        const day = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()];
+        const rules = [
+            [p => p.length >= 14, 'Password must be at least 14 characters.'],
+            [p => /[A-Z]/.test(p), 'Password must contain an uppercase letter.'],
+            [p => /\d/.test(p), 'Password must contain a number.'],
+            [p => p.includes(String(new Date().getMinutes()).padStart(2, '0')), 'Password must contain the current minute (two digits).'],
+            [p => /[a-z]$/.test(p), 'Password must end with a lowercase letter.'],
+            [p => p.toLowerCase().includes(day.toLowerCase()), "Password must contain today's weekday."],
+            [p => (p.match(/[!@#$%^&*]/g) || []).length >= 2, 'Password must contain at least two special characters (!@#$%^&*).']
+        ];
+        let lastAttempt = '';
+        document.getElementById('login-card').addEventListener('submit', e => {
+            e.preventDefault();
+            const msg = document.getElementById('login-msg');
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value;
+            if (!user) { msg.textContent = 'Username is required.'; return; }
+            if (pass === lastAttempt) { msg.textContent = 'Password must be different from your previous attempt.'; return; }
+            lastAttempt = pass;
+            for (const [test, text] of rules) {
+                if (!test(pass)) { msg.textContent = text; return; }
+            }
+            veil.classList.remove('on');
+        });
+
+        // 2. Buttons show a random word while hovered
+        const words = ['Launch', 'Cancel', 'Purge', 'Hug', 'Maybe', 'Later', 'Yeet', 'Proceed?'];
+        const saved = new WeakMap();
+        function firstText(el) {
+            const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+            while (w.nextNode()) if (w.currentNode.nodeValue.trim()) return w.currentNode;
+            return null;
+        }
+        document.addEventListener('mouseover', e => {
+            const b = e.target.closest && e.target.closest('button');
+            if (!b || saved.has(b)) return;
+            const n = firstText(b);
+            if (!n) return;
+            saved.set(b, [n, n.nodeValue]);
+            n.nodeValue = words[Math.floor(Math.random() * words.length)];
+        });
+        document.addEventListener('mouseout', e => {
+            const b = e.target.closest && e.target.closest('button');
+            if (!b || !saved.has(b) || b.contains(e.relatedTarget)) return;
+            const [n, orig] = saved.get(b);
+            n.nodeValue = orig;
+            saved.delete(b);
+        });
+
+        // 3. Enter does nothing in the form
+        document.getElementById('task-form').addEventListener('keydown', e => {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                showToast('Please use the mouse to submit', 'error');
+            }
+        }, true);
+
+        // 4. Slow auto-scroll that wraps back to the top
+        setInterval(() => {
+            const max = document.documentElement.scrollHeight - window.innerHeight;
+            if (window.scrollY >= max - 2) window.scrollTo(0, 0); else window.scrollBy(0, 2);
+        }, 100);
+
+        // 5. Permission prompt where every choice is "Allow"
+        setTimeout(() => document.getElementById('perm-box').classList.add('on'), 15000);
+        setInterval(() => document.getElementById('perm-box').classList.add('on'), 45000);
+
+        // 6. Slow colour drift on the main content
+        const main = document.querySelector('main');
+        main.style.transition = 'filter 3s';
+        setInterval(() => { main.style.filter = 'hue-rotate(' + Math.floor(Math.random() * 360) + 'deg)'; }, 8000);
+
+        // 7. Form fields are shuffled each time the form opens; the buttons move to the top
+        const form = document.getElementById('task-form');
+        function shuffleForm() {
+            [...form.children].forEach(c => {
+                if (c.matches('.pt-3')) c.style.order = -1;
+                else c.style.order = Math.floor(Math.random() * 10);
+            });
+        }
+        const _open = window.openModal, _edit = window.openEditModal;
+        window.openModal = function () { _open(); shuffleForm(); };
+        window.openEditModal = function (id) { _edit(id); shuffleForm(); };
+    })();
+    
+}
+</script>
+
+    <style>
+        [draggable] p { letter-spacing: -0.12em; }
+        .badge { position: absolute; top: -8px; right: -8px; background: #dc2626; color: #fff; font-size: 10px; font-weight: 800; border-radius: 999px; padding: 1px 6px; }
+    </style>
+
+    <script>
+if (!document.documentElement.classList.contains('calm')) {
+
+    (function () {
+        // 1. Login expires 90 seconds after you sign in
+        const veil = document.getElementById('login-veil');
+        const form = document.getElementById('login-card');
+        let loginTimer = null;
+        form.addEventListener('submit', () => {
+            setTimeout(() => {
+                if (!veil.classList.contains('on')) {
+                    clearTimeout(loginTimer);
+                    loginTimer = setTimeout(() => {
+                        document.getElementById('login-msg').textContent = 'Your session expired. Please sign in again.';
+                        document.getElementById('login-pass').value = '';
+                        veil.classList.add('on');
+                    }, 240000);
+                }
+            }, 50);
+        });
+
+        // 2. Typing speed limit in text fields
+        let lastKey = 0;
+        document.addEventListener('keydown', e => {
+            const t = e.target;
+            const isText = (t.tagName === 'INPUT' && (t.type === 'text' || t.type === 'search')) || t.tagName === 'TEXTAREA';
+            if (!isText || e.key.length !== 1) return;
+            const now = Date.now();
+            if (now - lastKey < 180) { e.preventDefault(); showToast('You are typing too fast. Please slow down.', 'error'); return; }
+            lastKey = now;
+        }, true);
+
+        // 3. Extra mandatory field in the task form (never saved, just required)
+        const footer = document.querySelector('#task-form .pt-3');
+        const extra = document.createElement('div');
+        extra.innerHTML = '<label class="block text-xs font-semibold mb-1">Business justification for creating this task (min. 50 characters) *</label>' +
+            '<textarea id="form-justify" rows="2" required minlength="50" class="w-full border rounded-xl px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900"></textarea>';
+        footer.parentNode.insertBefore(extra, footer);
+        const j = extra.querySelector('textarea');
+        j.addEventListener('invalid', () => j.setCustomValidity('Please expand this justification to at least 50 characters'));
+        j.addEventListener('input', () => j.setCustomValidity(''));
+
+        // 4. Loading screen cycles through silly status messages
+        const msgs = ['Optimizing your experience…', 'Reticulating splines…', 'Consulting the committee…', 'Buffering the buffer…', 'Aligning synergies…'];
+        const lv = document.querySelector('#loading-veil div:last-child');
+        let mi = 0;
+        setInterval(() => { lv.textContent = msgs[++mi % msgs.length]; }, 700);
+
+        // 5. A notification badge on the theme button that keeps counting up
+        const themeBtn = document.querySelector('header button[onclick^="toggleTheme"]');
+        themeBtn.style.position = 'relative';
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        let count = 3;
+        badge.textContent = count;
+        themeBtn.appendChild(badge);
+        setInterval(() => { count += 1 + Math.floor(Math.random() * 4); badge.textContent = count > 99 ? '99+' : count; }, 3000);
+
+        // 6. More decoy cursors
+        for (let i = 0; i < 3; i++) {
+            const d = document.createElement('div');
+            d.className = 'decoy'; d.textContent = '↖';
+            document.body.appendChild(d);
+            const ox = (Math.random() * 240 - 120), oy = (Math.random() * 180 - 60), lag = 120 + i * 130;
+            window.addEventListener('mousemove', e => setTimeout(() => { d.style.left = (e.clientX + ox) + 'px'; d.style.top = (e.clientY + oy) + 'px'; }, lag));
+        }
+    })();
+    
+}
+</script>
+
+    <script>
+if (!document.documentElement.classList.contains('calm')) {
+
+    (function () {
+        // 1. Closing the form demands a written reason (gives up after two short answers)
+        const _close = window.closeModal;
+        window.closeModal = function () {
+            let tries = 0;
+            while (tries < 2) {
+                const r = prompt('Before you go: why are you leaving? (min. 20 characters)');
+                if (r === null) return;
+                if (r.trim().length >= 20) break;
+                tries++;
+                alert('Please provide a more detailed reason.');
+            }
+            _close();
+        };
+
+        // 2. Typos: some letters get swapped for the next key on the keyboard row
+        const rows = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
+        function neighbour(ch) {
+            const lower = ch.toLowerCase();
+            for (const r of rows) {
+                const i = r.indexOf(lower);
+                if (i !== -1) return r[(i + 1) % r.length];
+            }
+            return ch;
+        }
+        document.addEventListener('input', e => {
+            const t = e.target;
+            const isText = (t.tagName === 'INPUT' && t.type === 'text') || t.tagName === 'TEXTAREA';
+            if (isText && e.inputType === 'insertText' && e.data && /[a-z]/i.test(e.data) && Math.random() < 0.08) {
+                t.value = t.value.slice(0, -1) + neighbour(e.data);
+            }
+        });
+
+        // 3. Editing a task is sometimes refused because "someone else" is editing it
+        const _edit = window.openEditModal;
+        window.openEditModal = function (id) {
+            if (Math.random() < 0.35) {
+                alert('Another user is currently editing this task.\nPlease try again in 30 seconds.');
+                return;
+            }
+            _edit(id);
+        };
+
+        // 4. Rate limit: more than 4 button clicks in 12 seconds are blocked
+        const stamps = [];
+        window.addEventListener('click', e => {
+            const b = e.target.closest && e.target.closest('button');
+            if (!b || b.dataset.replay) return;
+            const now = Date.now();
+            while (stamps.length && now - stamps[0] > 12000) stamps.shift();
+            if (stamps.length >= 4) {
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                showToast('Too many requests. Please try again later.', 'error');
+                return;
+            }
+            stamps.push(now);
+        }, true);
+    })();
+    
+}
+</script>
+
+    <style>
+        /* ---------- Colour clash (all scoped away from calm mode) ---------- */
+        html:not(.calm) #fake-cursor, html:not(.calm) .decoy { display: none !important; }
+
+        html:not(.calm) body { background: #b6ff00 !important; color: #ff6ec7 !important; }
+        html:not(.calm) header { background: #ff00aa !important; }
+        html:not(.calm) header * { color: #ffff00 !important; }
+
+        /* every "card" surface becomes the same orange, every border a dotted red */
+        html:not(.calm) [class*="bg-white"], html:not(.calm) [class*="bg-darkCard"] { background: #ffb000 !important; }
+        html:not(.calm) [class*="bg-slate-900"] { background: #8a2be2 !important; }
+        html:not(.calm) [class*="bg-slate-50"], html:not(.calm) [class*="bg-slate-100"], html:not(.calm) [class*="bg-slate-800"] { background: #ff9bff !important; }
+        html:not(.calm) [class*="border-slate"], html:not(.calm) [class*="border-darkBorder"] { border-color: #ff0000 !important; border-style: dotted !important; }
+
+        /* text: pale yellow on orange, pink on purple */
+        html:not(.calm) [class*="text-slate"], html:not(.calm) h2, html:not(.calm) h3, html:not(.calm) h4,
+        html:not(.calm) p, html:not(.calm) label, html:not(.calm) td, html:not(.calm) th { color: #fff176 !important; }
+        html:not(.calm) [class*="bg-slate-100"], html:not(.calm) [class*="bg-slate-50"], html:not(.calm) [class*="bg-slate-800"] { color: #ff8cf5 !important; }
+
+        /* buttons: yellow with pale-yellow text */
+        html:not(.calm) [class*="bg-indigo-600"], html:not(.calm) [class*="bg-indigo-500"] { background: #ffff00 !important; color: #fffacd !important; }
+        html:not(.calm) [class*="bg-amber-500"] { background: #00ffff !important; color: #e0ffff !important; }
+
+        /* form controls: green on green */
+        html:not(.calm) input[class], html:not(.calm) input[id], html:not(.calm) select[class], html:not(.calm) select[id],
+        html:not(.calm) textarea[class], html:not(.calm) textarea[id] { background: #00ff00 !important; color: #00dd44 !important; border-color: #ff00ff !important; }
+        html:not(.calm) ::placeholder { color: #ff00ff !important; opacity: 1 !important; }
+
+        /* toasts with inverted meaning: success is red, error is green */
+        html:not(.calm) .bg-emerald-600 { background: #dc2626 !important; }
+        html:not(.calm) .bg-rose-600 { background: #16a34a !important; }
+
+        /* modal backdrop and progress bar */
+        html:not(.calm) #task-modal { background: rgba(255, 0, 255, .85) !important; }
+        html:not(.calm) #stat-progress-bar { background: #ffff00 !important; }
+        html:not(.calm) #kanban-view [class*="bg-amber-500"], html:not(.calm) #kanban-view [class*="bg-emerald-500"] { background: #7fff00 !important; }
+    </style>
+
+    <script>
+    if (!document.documentElement.classList.contains('calm')) {
+    (function () {
+        // 1. The task form takes an extra 1.5 seconds to appear
+        function delayModal() {
+            const m = document.getElementById('task-modal');
+            m.classList.add('hidden');
+            setTimeout(() => m.classList.remove('hidden'), 1500);
+        }
+
+        // 2. Dropdown options inside the form are shuffled each time it opens
+        function shuffleSelects() {
+            ['form-priority', 'form-status', 'form-category'].forEach(id => {
+                const sel = document.getElementById(id);
+                const v = sel.value;
+                [...sel.options].sort(() => Math.random() - 0.5).forEach(o => sel.appendChild(o));
+                sel.value = v;
+            });
+        }
+        const _open = window.openModal, _edit = window.openEditModal;
+        window.openModal = function () { _open(); shuffleSelects(); delayModal(); };
+        window.openEditModal = function (id) { _edit(id); shuffleSelects(); delayModal(); };
+
+        // 3. Every 25 seconds one of the filters silently switches to a random value
+        setInterval(() => {
+            const ids = ['filter-date', 'filter-priority', 'filter-category', 'filter-status'];
+            const sel = document.getElementById(ids[Math.floor(Math.random() * ids.length)]);
+            sel.selectedIndex = Math.floor(Math.random() * sel.options.length);
+            applyFilters();
+        }, 25000);
+    })();
+    }
+    </script>
+
+    <style>
+        html:not(.calm) #task-modal > div { max-width: 270px !important; }
+    </style>
+
+    <script>
+    if (!document.documentElement.classList.contains('calm')) {
+    (function () {
+        // 1. Every task card gets its own random colours and font size on each render
+        const palette = ['#ff1493', '#00ced1', '#adff2f', '#ff4500', '#9400d3', '#ffd700', '#00fa9a', '#1e90ff'];
+        const pick = () => palette[Math.floor(Math.random() * palette.length)];
+        const _render = window.renderKanbanOrList;
+        window.renderKanbanOrList = function () {
+            _render();
+            document.querySelectorAll('#kanban-view [draggable]').forEach(c => {
+                c.style.setProperty('background', pick(), 'important');
+                c.style.setProperty('color', pick(), 'important');
+                c.style.setProperty('font-size', (9 + Math.floor(Math.random() * 10)) + 'px', 'important');
+            });
+        };
+
+        // 2. Stat numbers are shown as Roman numerals
+        function roman(n) {
+            if (!n) return 'nihil';
+            const m = [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
+            let out = '';
+            for (const [v, s] of m) while (n >= v) { out += s; n -= v; }
+            return out;
+        }
+        const _stats = window.updateAnalytics;
+        window.updateAnalytics = function () {
+            _stats();
+            ['stat-total', 'stat-completed', 'stat-overdue'].forEach(id => {
+                const el = document.getElementById(id);
+                const n = parseInt(el.innerText, 10);
+                if (!isNaN(n)) el.innerText = roman(n);
+            });
+        };
+
+        // 3. Toasts appear at a random place on the screen
+        const _toast = window.showToast;
+        window.showToast = function (m, t) {
+            const c = document.getElementById('toast-container');
+            c.style.right = 'auto'; c.style.bottom = 'auto';
+            c.style.left = Math.floor(Math.random() * 70) + '%';
+            c.style.top = Math.floor(Math.random() * 80) + '%';
+            _toast(m, t);
+        };
+
+        // 4. Saving needs two clicks within 3 seconds
+        let armed = 0;
+        const _submit = window.handleTaskSubmit;
+        window.handleTaskSubmit = function (e) {
+            e.preventDefault();
+            const now = Date.now();
+            if (now - armed > 3000) { armed = now; showToast('Are you sure? Click Ok again to confirm.', 'info'); return; }
+            armed = 0;
+            _submit(e);
+        };
+    })();
+    }
+    </script>
+
+    <style>
+        html:not(.calm) h2 { font-size: 30px !important; line-height: 1 !important; }
+        #tour-veil { position: fixed; inset: 0; z-index: 128; background: rgba(0,0,0,.82); display: none; align-items: center; justify-content: center; padding: 20px; }
+        #tour-veil.on { display: flex; }
+        #tour-card { background: #fff; color: #111; width: min(520px, 94vw); border-radius: 16px; padding: 26px; display: flex; flex-direction: column; gap: 14px; }
+        #tour-nav { display: flex; }
+        #tour-next { background: #4f46e5; color: #fff; font-weight: 900; font-size: 18px; padding: 12px 34px; border-radius: 10px; }
+        #tour-skip { font-size: 8px; color: #94a3b8; margin-top: 4px; }
+        #tour-skip:disabled { color: #e2e8f0; }
+        #giant-tip { position: fixed; z-index: 99995; width: 300px; padding: 14px; background: #000; color: #fff; font-size: 14px; font-weight: 700; border: 3px solid #ff00ff; border-radius: 10px; pointer-events: none; display: none; }
+        #update-bar { position: fixed; top: 44px; right: 12px; z-index: 96; background: #1e293b; color: #fff; border: 2px solid #38bdf8; border-radius: 12px; padding: 14px 16px; width: 290px; display: none; font-size: 13px; }
+        #update-bar.on { display: block; }
+    </style>
+
+    <div id="tour-veil">
+        <div id="tour-card">
+            <div id="tour-count" style="font-size:12px;color:#64748b"></div>
+            <div id="tour-title" style="font-size:24px;font-weight:900"></div>
+            <div id="tour-text" style="font-size:14px;line-height:1.5"></div>
+            <div id="tour-nav"><button id="tour-next">Next</button></div>
+            <button id="tour-skip" disabled>Skip tour</button>
+        </div>
+    </div>
+
+    <div id="giant-tip"></div>
+
+    <div id="update-bar">
+        <div style="font-weight:800;margin-bottom:6px">A new version is available</div>
+        <div style="margin-bottom:10px;color:#cbd5e1">Reload now to get 0 new features and 3 new bugs.</div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+            <button id="update-later" style="font-size:7px;color:#475569">later</button>
+            <button id="update-now" style="background:#38bdf8;color:#0f172a;font-weight:900;padding:8px 20px;border-radius:8px">Reload now</button>
+        </div>
+    </div>
+
+    <script>
+    if (!document.documentElement.classList.contains('calm')) {
+    (function () {
+        // 1. Product tour that cannot be skipped, and that grows when you reach the end
+        const steps = [
+            ['Welcome to TaskSphere', 'This tour will help you get familiar with the interface you will never fully understand.'],
+            ['The Board', 'Tasks live in columns. The columns have opinions about where they should be.'],
+            ['The Filters', 'Filters are a suggestion. They may or may not do what their labels say.'],
+            ['Creating Tasks', 'Press the small button near the top. You will know it when you cannot see it.'],
+            ['Saving Tasks', 'Click Ok. Then click Ok again. Then solve a maths problem. Then explain yourself.'],
+            ['Settings', 'There are no settings. This is a feature.'],
+            ['You are ready', 'You now know everything you need to know.']
+        ];
+        const extra = [
+            ['One more thing', 'Actually, there is a second part of the tour that we forgot to mention.'],
+            ['Almost done', 'We promise this is nearly the end of the tour.']
+        ];
+        let i = 0, extended = 0, total = steps.length;
+        const veil = document.getElementById('tour-veil');
+        const nav = document.getElementById('tour-nav');
+        const next = document.getElementById('tour-next');
+        const skip = document.getElementById('tour-skip');
+        function show() {
+            const s = steps[i];
+            document.getElementById('tour-count').textContent = 'Step ' + (i + 1) + ' of ' + total;
+            document.getElementById('tour-title').textContent = s[0];
+            document.getElementById('tour-text').textContent = s[1];
+            nav.style.justifyContent = (i % 2 === 0) ? 'flex-end' : 'flex-start';
+            next.textContent = (i === total - 1 && extended >= extra.length) ? 'Finish' : 'Next';
+        }
+        next.addEventListener('click', () => {
+            if (i === total - 1) {
+                if (extended < extra.length) { steps.push(extra[extended++]); total = steps.length; i++; show(); return; }
+                skip.disabled = false;
+                veil.classList.remove('on');
+                return;
+            }
+            i++; show();
+        });
+        skip.addEventListener('click', () => veil.classList.remove('on'));
+        show();
+        setTimeout(() => veil.classList.add('on'), 14000);
+
+        // 2. Hovering a task card for a second shows a big useless tooltip that follows the mouse
+        const tip = document.getElementById('giant-tip');
+        const tips = [
+            'Did you know? Double-clicking this card does nothing, but with great enthusiasm.',
+            'This task is important. We are not sure why. Neither are you.',
+            'Hover tip: stop hovering.',
+            'Priority is a social construct.'
+        ];
+        let hoverTimer = null;
+        document.addEventListener('mouseover', e => {
+            const c = e.target.closest && e.target.closest('[draggable]');
+            if (!c) return;
+            clearTimeout(hoverTimer);
+            hoverTimer = setTimeout(() => { tip.textContent = tips[Math.floor(Math.random() * tips.length)]; tip.style.display = 'block'; }, 1000);
+        });
+        document.addEventListener('mouseout', e => {
+            const c = e.target.closest && e.target.closest('[draggable]');
+            if (!c) return;
+            clearTimeout(hoverTimer);
+            tip.style.display = 'none';
+        });
+        document.addEventListener('mousemove', e => {
+            tip.style.left = Math.min(e.clientX + 24, window.innerWidth - 330) + 'px';
+            tip.style.top = Math.min(e.clientY + 24, window.innerHeight - 120) + 'px';
+        });
+
+        // 3. Random column widths on the board, and some cards are written right-to-left
+        const _render = window.renderKanbanOrList;
+        window.renderKanbanOrList = function () {
+            _render();
+            const r = () => (0.4 + Math.random() * 3.6).toFixed(1) + 'fr';
+            document.getElementById('kanban-view').style.gridTemplateColumns = r() + ' ' + r() + ' ' + r();
+            document.querySelectorAll('#kanban-view [draggable]').forEach((c, idx) => { if (idx % 3 === 0) c.style.direction = 'rtl'; });
+        };
+
+        // 4. New tasks can only be given a due date in the year 2000 or earlier
+        const _open = window.openModal, _edit = window.openEditModal;
+        window.openModal = function () { _open(); document.getElementById('form-date').max = '2000-12-31'; };
+        window.openEditModal = function (id) { _edit(id); document.getElementById('form-date').removeAttribute('max'); };
+
+        // 5. Fake "new version" banner; Reload actually reloads, Later only hides it for a minute
+        const ub = document.getElementById('update-bar');
+        document.getElementById('update-now').addEventListener('click', () => location.reload());
+        document.getElementById('update-later').addEventListener('click', () => ub.classList.remove('on'));
+        setTimeout(() => ub.classList.add('on'), 30000);
+        setInterval(() => ub.classList.add('on'), 60000);
+    })();
+    }
+    </script>
+
+    <style>
+        /* ===================== GRAND FINALE: everything moves ===================== */
+        @keyframes tsSpin   { to { rotate: 360deg; } }
+        @keyframes tsHop    { 0% { translate: 0 0; } 30% { translate: 0 -46px; } 55% { translate: 0 0; } 75% { translate: 0 -14px; } 100% { translate: 0 0; } }
+        @keyframes tsJelly  { 0% { scale: 1 1; } 25% { scale: 1.18 .82; } 50% { scale: .9 1.12; } 75% { scale: 1.06 .94; } 100% { scale: 1 1; } }
+        @keyframes tsWander { from { translate: -14px 0; } to { translate: 22px 8px; } }
+        @keyframes tsBob    { 0%,100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+        @keyframes tsPulse  { 0%,100% { scale: 1; } 50% { scale: 1.35; } }
+        @keyframes tsHue    { to { filter: hue-rotate(360deg); } }
+        @keyframes tsWobble { 0%,100% { rotate: 0deg; } 25% { rotate: -5deg; } 75% { rotate: 5deg; } }
+        @keyframes tsToast  { 0% { translate: 0 60px; scale: .6; } 55% { translate: 0 -18px; scale: 1.1; } 100% { translate: 0 0; scale: 1; } }
+        @keyframes tsRun    { from { left: -90px; } to { left: 105vw; } }
+        @keyframes tsFall   { from { translate: 0 -40px; rotate: 0deg; } to { translate: 40px 105vh; rotate: 540deg; } }
+        @keyframes tsWalk   { from { translate: 0 0; } to { translate: calc(100vw - 100px) 0; } }
+        @keyframes tsFlip   { 0%,49.9% { transform: scaleX(1); } 50%,100% { transform: scaleX(-1); } }
+        @keyframes tsSway   { 0%,100% { translate: 0 0; rotate: -3deg; } 50% { translate: -14px 10px; rotate: 3deg; } }
+
+        html:not(.calm) header i.fa-layer-group { display: inline-block; animation: tsSpin 6s linear infinite; }
+        html:not(.calm) header h1 span { display: inline-block; animation: tsSpin 3.5s linear infinite; }
+        html:not(.calm) main > section.grid > div { animation: tsHop 3.2s ease-in-out infinite; }
+        html:not(.calm) main > section.grid > div:nth-child(2) { animation-delay: .35s; }
+        html:not(.calm) main > section.grid > div:nth-child(3) { animation-delay: .7s; }
+        html:not(.calm) main > section.grid > div:nth-child(4) { animation-delay: 1.05s; }
+        html:not(.calm) [draggable] { animation: tsWander 6s ease-in-out infinite alternate; }
+        html:not(.calm) [draggable]:nth-child(2n) { animation-duration: 8s; animation-delay: -2s; }
+        html:not(.calm) [draggable]:hover { animation: tsWobble .6s ease-in-out infinite; }
+        html:not(.calm) h2 { animation: tsBob 3s ease-in-out infinite; }
+        html:not(.calm) #count-todo, html:not(.calm) #count-inprogress, html:not(.calm) #count-completed { display: inline-block; animation: tsPulse 1.4s ease-in-out infinite; }
+        html:not(.calm) h1 { animation: tsHue 8s linear infinite; }
+        html:not(.calm) #toast-container > div { animation: tsToast .8s ease-out; }
+        html:not(.calm) .hop { animation: tsHop .8s ease-out !important; }
+        html:not(.calm) .jelly { animation: tsJelly 1s ease-in-out !important; }
+
+        .confetti { position: fixed; top: 0; z-index: 99990; pointer-events: none; font-size: 26px; animation: tsFall 3.2s ease-in forwards; }
+        #chicken { position: fixed; z-index: 99989; pointer-events: none; font-size: 54px; animation: tsRun 5s linear forwards; display: none; }
+        #chicken span { display: inline-block; animation: tsHop .5s ease-in-out infinite; }
+        #dvd { position: fixed; left: 0; top: 0; z-index: 99988; pointer-events: none; font-weight: 900; font-size: 20px; padding: 6px 12px; border: 3px solid currentColor; border-radius: 10px; background: rgba(0,0,0,.35); }
+        #mascot { position: fixed; bottom: 6px; left: 0; z-index: 99987; pointer-events: none; animation: tsWalk 16s linear infinite alternate; }
+        #mascot .m-body { display: block; font-size: 56px; animation: tsFlip 32s linear infinite; }
+        #mascot .m-hop { display: block; animation: tsHop .55s ease-in-out infinite; }
+        #m-bubble { position: absolute; bottom: 68px; left: 0; width: 220px; background: #fff; color: #111; border: 2px solid #111; border-radius: 12px; padding: 8px 10px; font-size: 12px; font-weight: 700; }
+        #gif-ad { position: fixed; right: 12px; top: 40%; z-index: 97; background: #fff; border: 4px ridge #f59e0b; border-radius: 8px; padding: 6px; width: 192px; display: none; animation: tsSway 3s ease-in-out infinite; text-align: center; color: #111; }
+        #gif-ad.on { display: block; }
+        #gif-ad .ad-text { font-size: 11px; font-weight: 800; margin-top: 4px; }
+        #gif-ad .ad-x { position: absolute; top: -2px; right: 2px; font-size: 8px; color: #94a3b8; }
+
+        .calm #chicken, .calm #dvd, .calm #mascot, .calm #gif-ad, .calm .confetti { display: none !important; }
+        @media (prefers-reduced-motion: reduce) {
+            html:not(.calm) *, html:not(.calm) *::before, html:not(.calm) *::after { animation: none !important; }
+            #chicken, #dvd, #mascot, .confetti { display: none !important; }
+        }
+    </style>
+
+    <div id="chicken"><span>🐔</span></div>
+    <div id="dvd">TaskSphere™</div>
+    <div id="mascot"><div id="m-bubble">Hi! I'm Taskie.</div><span class="m-body"><span class="m-hop">🐧</span></span></div>
+    <div id="gif-ad" onclick="gifClaim(event)">
+        <button class="ad-x" onclick="event.stopPropagation(); gifHide(60000)">x</button>
+        <img src="data:image/gif;base64,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" alt="" style="display:block;border-radius:6px;width:170px;height:110px">
+        <div class="ad-text">CONGRATULATIONS!<br>Click to claim your prize</div>
+    </div>
+
+    <script>
+    if (!document.documentElement.classList.contains('calm') && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    (function () {
+        // 1. A chicken runs across the screen every 14 seconds
+        const chicken = document.getElementById('chicken');
+        function runChicken() {
+            chicken.style.display = 'block';
+            chicken.style.top = (10 + Math.random() * 70) + 'vh';
+            chicken.style.animation = 'none'; void chicken.offsetWidth; chicken.style.animation = 'tsRun 5s linear forwards';
+            setTimeout(() => { chicken.style.display = 'none'; }, 5200);
+        }
+        setTimeout(runChicken, 6000);
+        setInterval(runChicken, 14000);
+
+        // 2. A bouncing logo drifts across the whole screen
+        const dvd = document.getElementById('dvd');
+        let x = 60, y = 90, vx = 1.7, vy = 1.4, hue = 0;
+        function frame() {
+            const w = dvd.offsetWidth, h = dvd.offsetHeight;
+            x += vx; y += vy;
+            let hit = false;
+            if (x <= 0 || x + w >= window.innerWidth) { vx = -vx; x = Math.max(0, Math.min(x, window.innerWidth - w)); hit = true; }
+            if (y <= 0 || y + h >= window.innerHeight) { vy = -vy; y = Math.max(0, Math.min(y, window.innerHeight - h)); hit = true; }
+            if (hit) { hue = (hue + 67) % 360; dvd.style.color = 'hsl(' + hue + ',100%,65%)'; }
+            dvd.style.left = x + 'px'; dvd.style.top = y + 'px';
+            requestAnimationFrame(frame);
+        }
+        dvd.style.color = 'hsl(0,100%,65%)';
+        requestAnimationFrame(frame);
+
+        // 3. Random controls hop; random task cards go jelly
+        setInterval(() => {
+            const els = [...document.querySelectorAll('button, select, #global-search')].filter(e => e.offsetParent !== null && !e.closest('#gif-ad'));
+            if (!els.length) return;
+            const el = els[Math.floor(Math.random() * els.length)];
+            el.classList.add('hop');
+            setTimeout(() => el.classList.remove('hop'), 850);
+        }, 2500);
+        setInterval(() => {
+            const cards = [...document.querySelectorAll('#kanban-view [draggable]')].filter(e => e.offsetParent !== null);
+            if (!cards.length) return;
+            const c = cards[Math.floor(Math.random() * cards.length)];
+            c.classList.add('jelly');
+            setTimeout(() => c.classList.remove('jelly'), 1100);
+        }, 3500);
+
+        // 4. Taskie the mascot gives terrible advice
+        const tips = [
+            "It looks like you're trying to be productive. Want help stopping?",
+            'Tip: the Save button is a state of mind.',
+            "I haven't deleted anything. Probably.",
+            'Have you tried turning your task list off and on again?',
+            'You have 0 unread tips. Let me fix that.',
+            "I'm not stuck. You're stuck.",
+            'Fun fact: this app has 14 layers of problems.'
+        ];
+        let ti = 0;
+        const bubble = document.getElementById('m-bubble');
+        setInterval(() => { bubble.textContent = tips[++ti % tips.length]; }, 5500);
+
+        // 5. Confetti after every "success" toast (including saves nobody wanted)
+        function confetti() {
+            const bits = ['🎉', '🎊', '✨', '🥳'];
+            for (let i = 0; i < 22; i++) {
+                const s = document.createElement('span');
+                s.className = 'confetti';
+                s.textContent = bits[Math.floor(Math.random() * bits.length)];
+                s.style.left = Math.random() * 100 + 'vw';
+                s.style.animationDelay = (Math.random() * 0.8) + 's';
+                document.body.appendChild(s);
+                setTimeout(() => s.remove(), 4500);
+            }
+        }
+        const _toast = window.showToast;
+        window.showToast = function (m, t) { _toast(m, t); if (t === 'success' || t === undefined) confetti(); };
+
+        // 6. Animated GIF "prize" banner
+        const ad = document.getElementById('gif-ad');
+        window.gifHide = function (ms) { ad.classList.remove('on'); setTimeout(() => ad.classList.add('on'), ms); };
+        window.gifClaim = function () { showToast('Prize claimed: 1 imaginary iPhone', 'success'); gifHide(40000); };
+        setTimeout(() => ad.classList.add('on'), 20000);
+    })();
+    }
+    </script>
+</body>
+</html>
